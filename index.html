@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central de Dashboards - Segurança GIG</title>
+  <link rel="icon" href="icone lsg.ico" type="image/x-icon" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background-color: #f4f6f8;
+      color: #333;
+      overflow: hidden;
+    }
+
+    /* Tela de Login Overlay */
+    #login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      width: 340px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .login-logo {
+      max-width: 180px;
+      height: auto;
+      margin-bottom: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #0f172a;
+      font-size: 1.2rem;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 10px;
+      background-color: #38bdf8;
+      color: #0f172a;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .login-box button:hover {
+      background-color: #0284c7;
+      color: #fff;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* Layout Principal */
+    .sidebar {
+      width: 260px;
+      background-color: #1e293b;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      justify-content: space-between;
+    }
+
+    .sidebar-top {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-logo-container {
+      background-color: #ffffff;
+      padding: 8px;
+      margin: 0 15px 18px 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .sidebar-logo {
+      max-width: 110px;
+      height: auto;
+      display: block;
+    }
+
+    .sidebar h2 {
+      font-size: 1.05rem;
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 0 15px;
+      color: #38bdf8;
+    }
+
+    .nav-list { list-style: none; }
+
+    .nav-item {
+      padding: 14px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: #94a3b8;
+      border-left: 4px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover { background-color: #334155; color: #f8fafc; }
+    .nav-item.active { background-color: #0f172a; color: #38bdf8; border-left-color: #38bdf8; font-weight: 600; }
+
+    /* Botão Sair */
+    .logout-btn {
+      padding: 12px 20px;
+      margin: 0 15px;
+      background-color: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover {
+      background-color: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background-color: #fff;
+      padding: 12px 25px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 { font-size: 1.2rem; color: #0f172a; }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Controles de Zoom */
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .zoom-btn {
+      background: none;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #475569;
+    }
+
+    .zoom-btn:hover { background: #e2e8f0; }
+
+    .zoom-text {
+      font-size: 0.85rem;
+      padding: 0 8px;
+      color: #475569;
+      user-select: none;
+    }
+
+    .external-btn {
+      padding: 8px 14px;
+      background-color: #f1f5f9;
+      color: #475569;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      border: 1px solid #cbd5e1;
+    }
+
+    .external-btn.disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .iframe-container {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .welcome-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      color: #64748b;
+      background-color: #f8fafc;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .welcome-screen span {
+      font-size: 3rem;
+      margin-bottom: 15px;
+    }
+
+    .welcome-screen h2 {
+      font-size: 1.3rem;
+      color: #334155;
+      font-weight: 500;
+    }
+
+    .dashboard-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      transform-origin: 0 0;
+      transition: transform 0.1s ease;
+      display: none;
+    }
+
+    .dashboard-frame.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela de Login -->
+  <div id="login-screen">
+    <div class="login-box">
+      <img src="logo lsg.png" alt="LSG Sky Chefs" class="login-logo">
+      <h2>Segurança GIG</h2>
+      <input type="text" id="username" placeholder="Usuário" onkeyup="handleKeyPress(event)">
+      <input type="password" id="password" placeholder="Senha" onkeyup="handleKeyPress(event)">
+      <button onclick="handleLogin()">Entrar</button>
+      <div id="error-msg" class="error-message">Usuário ou senha incorretos!</div>
+    </div>
+  </div>
+
+  <!-- Dashboard App -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo-container">
+        <img src="logo lsg.png" alt="LSG Sky Chefs" class="sidebar-logo">
+      </div>
+      <h2>Central de Dashboards</h2>
+      <ul class="nav-list">
+        <li class="nav-item" onclick="loadDashboard('dss-frame', 'https://dss-gig.vercel.app/gestor', 'DSS Gestor', this)">
+          <span>📊</span> DSS Gestor
+        </li>
+        <li class="nav-item" onclick="loadDashboard('veiculos-frame', 'https://veiculos-gig.vercel.app/gestor', 'Saída de Veículos', this)">
+          <span>🚗</span> Saída de Veículos
+        </li>
+        <li class="nav-item" onclick="loadDashboard('viaturas-frame', 'https://viaturas-gig.vercel.app/gestor', 'Saída de Viaturas', this)">
+          <span>🚒</span> Saída de Viaturas
+        </li>
+      </ul>
+    </div>
+
+    <!-- Botão Sair -->
+    <button class="logout-btn" onclick="handleLogout()">
+      <span>🚪</span> Sair
+    </button>
+  </aside>
+
+  <main class="main-content">
+    <header>
+      <h1 id="current-title">Bem-vindo</h1>
+      
+      <div class="header-controls">
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="changeZoom(-0.1)">-</button>
+          <span class="zoom-text" id="zoom-level">100%</span>
+          <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+          <button class="zoom-btn" onclick="resetZoom()" style="border-left: 1px solid #cbd5e1;">Reset</button>
+        </div>
+
+        <a id="external-link" href="#" target="_blank" class="external-btn disabled">Abrir em nova aba ↗</a>
+      </div>
+    </header>
+
+    <div class="iframe-container">
+      <div id="welcome-msg" class="welcome-screen">
+        <span>👈</span>
+        <h2>Escolha no menu ao lado em qual Dashboard gostaria de acessar</h2>
+      </div>
+
+      <iframe id="dss-frame" class="dashboard-frame"></iframe>
+      <iframe id="veiculos-frame" class="dashboard-frame"></iframe>
+      <iframe id="viaturas-frame" class="dashboard-frame"></iframe>
+    </div>
+  </main>
+
+  <script>
+    // Configurações de Login Criptografado (SHA-256)
+    const USER_EXPECTED = 'seguranca';
+    // Hash SHA-256 correspondente à senha "123"
+    const PASS_HASH_EXPECTED = '48e356aa8a3f97dfbde7891abca32978996567d83fe5fcf22582b7ab8772d610';
+
+    // Função para converter texto simples em SHA-256
+    async function hashPassword(str) {
+      const buf = new TextEncoder().encode(str);
+      const hash = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    // Acionar login ao pressionar Enter
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        handleLogin();
+      }
+    }
+
+    // Validação do Login
+    async function handleLogin() {
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value;
+      const passHash = await hashPassword(pass);
+
+      if (user === USER_EXPECTED && passHash === PASS_HASH_EXPECTED) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('error-msg').style.display = 'none';
+      } else {
+        document.getElementById('error-msg').style.display = 'block';
+      }
+    }
+
+    // Função para Sair
+    function handleLogout() {
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('error-msg').style.display = 'none';
+
+      // Restaura tela de boas-vindas
+      document.getElementById('welcome-msg').style.display = 'flex';
+      document.getElementById('current-title').textContent = 'Bem-vindo';
+
+      const frames = document.querySelectorAll('.dashboard-frame');
+      frames.forEach(f => f.classList.remove('active'));
+
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(item => item.classList.remove('active'));
+
+      const extBtn = document.getElementById('external-link');
+      extBtn.href = '#';
+      extBtn.classList.add('disabled');
+
+      activeFrameId = null;
+    }
+
+    let activeFrameId = null;
+
+    function loadDashboard(frameId, url, title, element) {
+      document.getElementById('welcome-msg').style.display = 'none';
+
+      const frames = document.querySelectorAll('.dashboard-frame');
+      frames.forEach(f => f.classList.remove('active'));
+
+      const targetFrame = document.getElementById(frameId);
+
+      if (!targetFrame.src || targetFrame.src === 'about:blank') {
+        targetFrame.src = url;
+      }
+
+      targetFrame.classList.add('active');
+      activeFrameId = frameId;
+
+      document.getElementById('current-title').textContent = title;
+      const extBtn = document.getElementById('external-link');
+      extBtn.href = url;
+      extBtn.classList.remove('disabled');
+
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(item => item.classList.remove('active'));
+      element.classList.add('active');
+
+      applyZoom();
+    }
+
+    // Lógica de Zoom
+    let currentScale = 1;
+
+    function changeZoom(delta) {
+      currentScale += delta;
+      if (currentScale < 0.5) currentScale = 0.5;
+      if (currentScale > 2.0) currentScale = 2.0;
+
+      applyZoom();
+    }
+
+    function resetZoom() {
+      currentScale = 1;
+      applyZoom();
+    }
+
+    function applyZoom() {
+      if (!activeFrameId) return;
+
+      const frame = document.getElementById(activeFrameId);
+      if (frame) {
+        frame.style.transform = `scale(${currentScale})`;
+        frame.style.width = `${100 / currentScale}%`;
+        frame.style.height = `${100 / currentScale}%`;
+      }
+      document.getElementById('zoom-level').textContent = `${Math.round(currentScale * 100)}%`;
+    }
+  </script>
+
+</body>
+</html>
